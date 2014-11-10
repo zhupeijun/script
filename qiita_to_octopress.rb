@@ -4,56 +4,43 @@ require 'yaml'
 require 'stringex'
 
 def qiita_posts
-  user_id = "your user id"
+  user_id = "your_user_id"
   qiita_api = "https://qiita.com/api/v1/users/#{user_id}/items"
   json = open(qiita_api).read
-  objs = JSON.parse(json)
-  posts = []
-  objs.each do |post_json|
-    title = post_json["title"]
-    content = post_json["raw_body"]
-    date = post_json["updated_at"]
-    dic = {"title" => title, "content" => content, "date" => date}
-    posts.push dic
+  post_jsons = JSON.parse(json)
+  post_jsons.map do |post_json|
+    { "title" => post_json["title"], "content" => post_json["raw_body"],
+      "date" => post_json["updated_at"] }
   end
-  posts
 end
 
-def read_yaml(path)
-  yaml = ""
-  cnt = 0
+def read_otc_post_yaml(path)
+  yaml_string = ""
+  separator_count = 0
   File.open(path).each do |line|
     if line.chomp == "---"
-      cnt = cnt + 1
-      if cnt == 1
-        next
-      else
-        break
-      end
+      separator_count += 1
+      next if separator_count == 1
+      break if separator_count > 1
     end
-    yaml = yaml + line
+    yaml_string << line
   end
-  return yaml
+  yaml_string
 end
 
 def hash_info(path)
-  yaml = read_yaml(path)
-  YAML.load(yaml)
+  YAML.load(read_otc_post_yaml(path))
 end
 
-def post_files
+def oct_post_files
   Dir.glob("source/_posts/*.markdown")
 end
 
 def oct_post
-  posts = []
-  post_files.each do |f|
-    posts.push hash_info(f)
-  end
-  posts
+  oct_post_files.map { |f| hash_info(f) }
 end
 
-def find_oct_post(title)
+def has_post?(title)
   oct_post.find { |post| post["title"] == title }
 end
 
@@ -62,7 +49,7 @@ def update
     source_dir = "source/_posts/"
     title = post["title"]
     date = post
-    if(!find_oct_post(title))
+    if(!has_post?(title))
       puts "[NEW]   #{title}"
       write_post("#{source_dir}#{Time.now.strftime('%Y-%m-%d')}-#{title.to_url}.markdown", post)
     else
