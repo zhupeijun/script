@@ -3,10 +3,11 @@
 file=$1
 out="${file%.*}.o"
 g++ -std=c++11 $1 -o $out
-if [ $? -ne 0 ] 
+if [ $? -ne 0 ]
 then
   echo "Compile Failed!"
 else
+  echo "Compile Successed!"
   st=$(($(gdate +%s%N)/1000000))
   ./$out
   ed=$(($(gdate +%s%N)/1000000))
