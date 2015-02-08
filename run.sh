@@ -1,8 +1,16 @@
 #!/bin/bash
 
 file=$1
+ext="${file##*.}"
 out="${file%.*}.o"
-g++ -std=c++11 $1 -o $out
+
+if [ "$ext" == "go" ]
+then
+  go build -o $out $1
+else
+  g++ -std=c++11 $1 -o $out
+fi
+
 if [ $? -ne 0 ]
 then
   echo "Compile Failed!"
